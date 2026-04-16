@@ -1,0 +1,70 @@
+---
+# Example playbook for the proton_pass lookup plugin.
+#
+# Create the fixture first:
+#   tools/setup_example.sh
+#
+# To use a custom pass-cli binary or wrapper:
+#   PASS_CLI=/path/to/my-custom-pass-cli tools/setup_example.sh
+#
+# If pass-cli is not already logged in, export your PAT before running:
+#   export PROTON_PASS_PERSONAL_ACCESS_TOKEN="pst_...::KEY"
+#
+# Run with:
+#   ansible-playbook -i localhost, examples/playbook.yml
+
+- name: Proton Pass lookup examples
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    proton_example_vault: ForAnsible
+    proton_example_item: TestItem
+    proton_example_session_dir: /tmp/proton_pass_example_session
+
+  tasks:
+    - name: Fetch password
+      ansible.builtin.debug:
+        msg: >-
+          {{ lookup('proton_pass',
+                    vault_name=proton_example_vault,
+                    item_title=proton_example_item,
+                    field='password') }}
+
+    - name: Fetch username and password
+      ansible.builtin.set_fact:
+        db_username: "{{ lookup('proton_pass', vault_name=proton_example_vault, item_title=proton_example_item, field='username') }}"
+        db_password: "{{ lookup('proton_pass', vault_name=proton_example_vault, item_title=proton_example_item, field='password') }}"
+      no_log: true
+
+    - name: Show fetched login fields
+      ansible.builtin.debug:
+        msg: "user={{ db_username }} pass={{ db_password }}"
+
+    - name: Fetch the custom field
+      ansible.builtin.debug:
+        msg: >-
+          {{ lookup('proton_pass',
+                    vault_name=proton_example_vault,
+                    item_title=proton_example_item,
+                    field='customfield') }}
+
+    - name: Fetch the hidden custom field
+      ansible.builtin.debug:
+        msg: >-
+          {{ lookup('proton_pass',
+                    vault_name=proton_example_vault,
+                    item_title=proton_example_item,
+                    field='hiddenfield') }}
+
+    - name: Fetch multiple secrets sharing a single session
+      ansible.builtin.set_fact:
+        session_username: "{{ lookup('proton_pass', vault_name=proton_example_vault, item_title=proton_example_item, field='username', session_dir=proton_example_session_dir) }}"
+        session_password: "{{ lookup('proton_pass', vault_name=proton_example_vault, item_title=proton_example_item, field='password', session_dir=proton_example_session_dir) }}"
+        session_hidden: "{{ lookup('proton_pass', vault_name=proton_example_vault, item_title=proton_example_item, field='hiddenfield', session_dir=proton_example_session_dir) }}"
+      no_log: true
+
+    - name: Show fetched values from the shared session
+      ansible.builtin.debug:
+        msg: "username={{ session_username }} password={{ session_password }} hiddenfield={{ session_hidden }}"
