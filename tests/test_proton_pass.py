@@ -118,7 +118,9 @@ class LookupModuleTests(unittest.TestCase):
         FakeCLI.values = {"GitHub": "gh-password"}
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            relative_session_dir = pathlib.Path(tmpdir) / ".." / pathlib.Path(tmpdir).name
+            relative_session_dir = (
+                pathlib.Path(tmpdir) / ".." / pathlib.Path(tmpdir).name
+            )
 
             with mock.patch.object(plugin, "ProtonPassCLI", FakeCLI):
                 plugin.LookupModule().run(
@@ -130,7 +132,11 @@ class LookupModuleTests(unittest.TestCase):
 
         self.assertEqual(
             FakeCLI.captured_init["session_dir"],
-            str(pathlib.Path(os.path.abspath(os.path.expanduser(str(relative_session_dir))))),
+            str(
+                pathlib.Path(
+                    os.path.abspath(os.path.expanduser(str(relative_session_dir)))
+                )
+            ),
         )
 
 
@@ -143,13 +149,17 @@ class ProtonPassCLITests(unittest.TestCase):
                 session_dir=session_dir,
             )
 
-            with mock.patch.object(cli, "_build_native_env", return_value={}), mock.patch.object(
-                cli, "_build_env", return_value={}
-            ), mock.patch.object(cli, "_needs_login", return_value=False), mock.patch.object(
-                cli, "_is_logged_in", side_effect=[False, False, False]
-            ), mock.patch.object(cli, "_logout_force") as logout_force, mock.patch.object(
-                cli, "_login"
-            ) as login, mock.patch.object(cli, "_write_sentinel") as write_sentinel:
+            with (
+                mock.patch.object(cli, "_build_native_env", return_value={}),
+                mock.patch.object(cli, "_build_env", return_value={}),
+                mock.patch.object(cli, "_needs_login", return_value=False),
+                mock.patch.object(
+                    cli, "_is_logged_in", side_effect=[False, False, False]
+                ),
+                mock.patch.object(cli, "_logout_force") as logout_force,
+                mock.patch.object(cli, "_login") as login,
+                mock.patch.object(cli, "_write_sentinel") as write_sentinel,
+            ):
                 with cli:
                     pass
 
