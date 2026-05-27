@@ -2,6 +2,18 @@
 # GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
+import hashlib
+import os
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+
+from ansible.errors import AnsibleError, AnsibleOptionsError
+from ansible.plugins.lookup import LookupBase
+from ansible.utils.display import Display
+
 
 DOCUMENTATION = r"""
 name: proton_pass
@@ -175,18 +187,6 @@ _raw:
   elements: str
 """
 
-import hashlib
-import os
-import shlex
-import shutil
-import subprocess
-import sys
-import tempfile
-
-from ansible.errors import AnsibleError, AnsibleOptionsError
-from ansible.plugins.lookup import LookupBase
-from ansible.utils.display import Display
-
 display = Display()
 
 
@@ -227,7 +227,9 @@ class ProtonPassCLI:
         self._working_dir: str | None = None  # set in __enter__ when we own the session
         self._ephemeral = session_dir is None
         self._env: dict[str, str] = {}
-        self._is_native_session: bool = False  # True when reusing the user's own session
+        self._is_native_session: bool = (
+            False  # True when reusing the user's own session
+        )
 
     # ------------------------------------------------------------------
     # Context manager, handles session directory lifecycle
@@ -257,7 +259,9 @@ class ProtonPassCLI:
         # 3. For persistent sessions, try the sentinel fast path.
         if not self._ephemeral and self._pass_pat and not self._needs_login():
             if self._is_logged_in(self._env):
-                display.vvv("proton_pass: reusing persistent session (sentinel matched)")
+                display.vvv(
+                    "proton_pass: reusing persistent session (sentinel matched)"
+                )
                 return self
             display.vvv(
                 "proton_pass: sentinel matched but the isolated session is not valid; reauthenticating"
@@ -288,7 +292,9 @@ class ProtonPassCLI:
         if self._ephemeral and self._working_dir:
             self._logout()
             shutil.rmtree(self._working_dir, ignore_errors=True)
-            display.vvv(f"proton_pass: cleaned up ephemeral session dir: {self._working_dir}")
+            display.vvv(
+                f"proton_pass: cleaned up ephemeral session dir: {self._working_dir}"
+            )
         # Persistent session: leave the directory intact for the next call.
 
     # ------------------------------------------------------------------
@@ -411,7 +417,9 @@ class ProtonPassCLI:
         except subprocess.TimeoutExpired:
             raise ProtonPassException(f"pass-cli timed out during: {description}")
         if result.returncode != 0:
-            error_output = (result.stderr or result.stdout).strip() or f"exit code {result.returncode}"
+            error_output = (
+                result.stderr or result.stdout
+            ).strip() or f"exit code {result.returncode}"
             raise ProtonPassException(
                 f"pass-cli failed during '{description}': {error_output}"
             )
@@ -474,7 +482,6 @@ class ProtonPassCLI:
 
 
 class LookupModule(LookupBase):
-
     @staticmethod
     def _clean_string(value):
         if value is None:
@@ -492,7 +499,9 @@ class LookupModule(LookupBase):
         for term in terms:
             cleaned = self._clean_string(term)
             if not cleaned:
-                raise AnsibleOptionsError("Positional item titles must be non-empty strings.")
+                raise AnsibleOptionsError(
+                    "Positional item titles must be non-empty strings."
+                )
             normalized.append(cleaned)
         return normalized
 
@@ -501,7 +510,9 @@ class LookupModule(LookupBase):
 
         item_terms = self._normalize_terms(terms)
         pass_pat = self._clean_string(self.get_option("pass_pat")) or ""
-        pass_cli_path = self._clean_string(self.get_option("pass_cli_path")) or "pass-cli"
+        pass_cli_path = (
+            self._clean_string(self.get_option("pass_cli_path")) or "pass-cli"
+        )
         session_dir = self._clean_string(self.get_option("session_dir")) or None
         vault_name = self._clean_string(self.get_option("vault_name"))
         share_id = self._clean_string(self.get_option("share_id"))
@@ -515,9 +526,13 @@ class LookupModule(LookupBase):
         # ----- Validate options -----
 
         if vault_name and share_id:
-            raise AnsibleOptionsError("'vault_name' and 'share_id' are mutually exclusive.")
+            raise AnsibleOptionsError(
+                "'vault_name' and 'share_id' are mutually exclusive."
+            )
         if not vault_name and not share_id:
-            raise AnsibleOptionsError("One of 'vault_name' or 'share_id' must be provided.")
+            raise AnsibleOptionsError(
+                "One of 'vault_name' or 'share_id' must be provided."
+            )
 
         if item_terms and item_title:
             raise AnsibleOptionsError(
@@ -528,11 +543,11 @@ class LookupModule(LookupBase):
                 "Positional item titles and 'item_id' are mutually exclusive."
             )
         if item_title and item_id:
-            raise AnsibleOptionsError("'item_title' and 'item_id' are mutually exclusive.")
-        if not item_terms and not item_title and not item_id:
             raise AnsibleOptionsError(
-                "Provide an item via 'item_title' or 'item_id'."
+                "'item_title' and 'item_id' are mutually exclusive."
             )
+        if not item_terms and not item_title and not item_id:
+            raise AnsibleOptionsError("Provide an item via 'item_title' or 'item_id'.")
         if not field:
             raise AnsibleOptionsError("'field' must be a non-empty string.")
 
@@ -540,7 +555,9 @@ class LookupModule(LookupBase):
 
         item_titles = item_terms or ([item_title] if item_title else [])
 
-        with ProtonPassCLI(cli_path=pass_cli_path, pass_pat=pass_pat, session_dir=session_dir) as pp:
+        with ProtonPassCLI(
+            cli_path=pass_cli_path, pass_pat=pass_pat, session_dir=session_dir
+        ) as pp:
             if item_id:
                 return [
                     pp.get_field(
