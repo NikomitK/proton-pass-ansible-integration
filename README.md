@@ -29,6 +29,16 @@ And also supports two item selectors:
 
 Copy or symlink `lookup_plugins/proton_pass.py` into your playbook directory, or add the repository lookup path to `ansible.cfg`.
 
+You can also download the plugin file with the following command:
+
+```
+# Wget
+mkdir -p lookup_plugins && wget https://github.com/protonpass/proton-pass-ansible-integration/raw/refs/heads/main/lookup_plugins/proton_pass.py -O lookup_plugins/proton_pass.py
+
+# Curl
+mkdir -p lookup_plugins && curl -o lookup_plugins/proton_pass.py https://github.com/protonpass/proton-pass-ansible-integration/raw/refs/heads/main/lookup_plugins/proton_pass.py
+```
+
 Example layout:
 
 ```text
