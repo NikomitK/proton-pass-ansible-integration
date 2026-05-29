@@ -33,10 +33,10 @@ You can also download the plugin file with the following command:
 
 ```
 # Wget
-mkdir -p lookup_plugins && wget https://github.com/protonpass/proton-pass-ansible-integration/raw/refs/heads/main/lookup_plugins/proton_pass.py -O lookup_plugins/proton_pass.py
+mkdir -p lookup_plugins && wget https://raw.githubusercontent.com/protonpass/proton-pass-ansible-integration/refs/heads/main/lookup_plugins/proton_pass.py -O lookup_plugins/proton_pass.py
 
 # Curl
-mkdir -p lookup_plugins && curl -o lookup_plugins/proton_pass.py https://github.com/protonpass/proton-pass-ansible-integration/raw/refs/heads/main/lookup_plugins/proton_pass.py
+mkdir -p lookup_plugins && curl -o lookup_plugins/proton_pass.py https://raw.githubusercontent.com/protonpass/proton-pass-ansible-integration/refs/heads/main/lookup_plugins/proton_pass.py
 ```
 
 Example layout:
