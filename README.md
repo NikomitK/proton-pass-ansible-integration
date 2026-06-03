@@ -1,6 +1,6 @@
 # Proton Pass Ansible Lookup Plugin
 
-This repository contains an Ansible lookup plugin that reads secrets from Proton Pass through the `pass-cli` binary. The lookup runs on the Ansible controller, so the controller needs access to `pass-cli` and to a valid Proton Pass session or Personal Access Token (PAT).
+This repository contains a fork of the official Ansible lookup plugin that reads secrets from Proton Pass through the `pass-cli` binary. The lookup runs on the Ansible controller, so the controller needs access to `pass-cli` and to a valid Proton Pass session or Personal Access Token (PAT).
 
 ## What the plugin does
 
@@ -15,6 +15,12 @@ And also supports two item selectors:
 
 - `item_id`, which is the most stable option for automation.
 - `item_title`
+
+## What the fork does
+
+The fork introduces the option, to directly get a generated totp with a single lookup. It utilizes the `pass-cli item totp ...` command.
+
+To get a generated totp, pass "totp-gen" as the field. This will replace the command executed and returns the generated six digit totp.
 
 ## Requirements
 

@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import json
 
 from ansible.errors import AnsibleError, AnsibleOptionsError
 from ansible.plugins.lookup import LookupBase
@@ -395,7 +396,7 @@ class ProtonPassCLI:
             redacted.append(arg)
         return shlex.join(redacted)
 
-    def _run(self, args: list[str], description: str) -> str:
+    def _run(self, args: list[str], description: str, isTotp=False) -> str:
         cmd = [self._cli_path] + args
         debug_cmd = self._format_command(args)
         display.vvv(f"proton_pass: running: {debug_cmd}")
@@ -423,6 +424,8 @@ class ProtonPassCLI:
             raise ProtonPassException(
                 f"pass-cli failed during '{description}': {error_output}"
             )
+        if isTotp:
+            return json.loads(result.stdout)['totp']
         return result.stdout
 
     def _login(self) -> None:
@@ -463,7 +466,10 @@ class ProtonPassCLI:
         Exactly one of (vault_name, share_id) and exactly one of
         (item_title, item_id) must be provided.
         """
-        args = ["item", "view"]
+        if field == "totp-gen":
+            args = ["item", "totp"]
+        else:
+            args = ["item", "view"]
 
         if share_id:
             args += ["--share-id", share_id]
@@ -475,10 +481,13 @@ class ProtonPassCLI:
         else:
             args += ["--item-title", item_title]
 
-        args += ["--field", field]
+        if field != "totp-gen":
+            args += ["--field", field]
+        else:
+            args += ["--output", "json"]
 
         desc = f"fetch field '{field}' from item '{item_id or item_title}'"
-        return self._run(args, description=desc).strip()
+        return self._run(args, description=desc, isTotp=field=="totp-gen").strip()
 
 
 class LookupModule(LookupBase):
